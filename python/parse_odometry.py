@@ -3,7 +3,7 @@ import IPython
 import numpy as np
 import minkindr as mk
 
-from transformation_helper import *
+from transformation_helpers import *
 
 def parse_synchronized_odometry(odometry_file, odometry_cov_file):
   assert(os.path.exists(odometry_file))
