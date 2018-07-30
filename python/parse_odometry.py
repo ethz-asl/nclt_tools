@@ -43,5 +43,14 @@ def parse_synchronized_odometry(odometry_file, odometry_cov_file):
 
     time_us_T_O_Bks_with_covs.append((utime, T_O_Bk, cov))
 
+    T_O_Bkm1 = T_O_Bk
+
   print 'done'
+
+  #xs = [T.getPosition()[0] for t, T, c in time_us_T_O_Bks_with_covs]
+  #ys = [T.getPosition()[1] for t, T, c in time_us_T_O_Bks_with_covs]
+  #zs = [T.getPosition()[2] for t, T, c in time_us_T_O_Bks_with_covs]
+
+  #IPython.embed()
+
   return time_us_T_O_Bks_with_covs
