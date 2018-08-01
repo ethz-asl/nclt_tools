@@ -19,7 +19,7 @@ import IPython
 import os
 import time
 
-def xyz_array_to_pointcloud2(points, stamp, frame_id):
+def xyzil_array_to_pointcloud2(points, stamp, frame_id):
     '''
     Create a sensor_msgs.PointCloud2 from an array
     of points.
@@ -62,6 +62,48 @@ def xyz_array_to_pointcloud2(points, stamp, frame_id):
 
     return msg
 
+def xyzi_array_to_pointcloud2(points, stamp, frame_id):
+    '''
+    Create a sensor_msgs.PointCloud2 from an array
+    of points.
+    '''
+    msg = PointCloud2()
+
+    num_values = points.shape[0]
+    assert(num_values > 0)
+
+    NUM_FIELDS = 4
+    assert(np.mod(num_values, NUM_FIELDS) == 0)
+    
+    num_points = num_values / NUM_FIELDS
+
+    if stamp:
+        msg.header.stamp = stamp
+    if frame_id:
+        msg.header.frame_id = frame_id
+
+    assert(len(points.shape) == 1)
+    msg.height = 1
+
+    FLOAT_SIZE_BYTES = 4
+    msg.width = num_values * FLOAT_SIZE_BYTES
+
+    msg.fields = [
+        PointField('x', 0, PointField.FLOAT32, 1),
+        PointField('y', 4, PointField.FLOAT32, 1),
+        PointField('z', 8, PointField.FLOAT32, 1),
+        PointField('i', 12, PointField.FLOAT32, 1)]
+    msg.is_bigendian = False
+    msg.point_step = NUM_FIELDS * FLOAT_SIZE_BYTES
+
+    msg.row_step = msg.point_step * num_points
+    msg.is_dense = False #int(np.isfinite(points).all())
+
+    msg.width = num_points
+    msg.data = np.asarray(points, np.float32).tostring()
+
+    return msg
+
 def convert(x_s, y_s, z_s):
 
     scaling = 0.005 # 5 mm
@@ -92,12 +134,12 @@ def parse_vel_sync_csv(filepath, stamp, frame_id):
 
       #x, y, z = convert(x, y, z)
 
-      hits += [x, y, z, i, l]
+      hits += [x, y, z, i]#, l]
 
     f_bin.close()
     hits = np.asarray(hits)
 
-    pc2_msg = xyz_array_to_pointcloud2(hits, stamp, frame_id)
+    pc2_msg = xyzi_array_to_pointcloud2(hits, stamp, frame_id)
 
     return pc2_msg
 
@@ -130,7 +172,7 @@ def parse_vel_sync(filepath, stamp, frame_id):
 
         s = "%5.3f, %5.3f, %5.3f, %d, %d" % (x, y, z, i, l)
 
-        hits += [x, y, z, i, l]
+        hits += [x, y, z, i] #, l]
 
     end = time.time()
     print 'Unpacking took: ',  end - start, 's.'
@@ -139,7 +181,7 @@ def parse_vel_sync(filepath, stamp, frame_id):
     f_bin.close()
     hits = np.asarray(hits)
 
-    pc2_msg = xyz_array_to_pointcloud2(hits, stamp, frame_id)
+    pc2_msg = xyzi_array_to_pointcloud2(hits, stamp, frame_id)
     end = time.time()
     print 'PC2 conversion took: ',  end - start, 's.'
 

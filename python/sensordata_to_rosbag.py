@@ -102,9 +102,9 @@ def write_gps(gps, i, bag):
     speed = Float64()
     speed.data = gps[i, 7]
 
-    bag.write('gps_fix', fix, t=timestamp)
-    bag.write('gps_track', track, t=timestamp)
-    bag.write('gps_speed', speed, t=timestamp)
+    bag.write('/gps_fix', fix, t=timestamp)
+    bag.write('/gps_track', track, t=timestamp)
+    bag.write('/gps_speed', speed, t=timestamp)
 
 def write_gps_rtk(gps, i, bag):
 
@@ -142,9 +142,9 @@ def write_gps_rtk(gps, i, bag):
     speed = Float64()
     speed.data = gps[i, 7]
 
-    bag.write('gps_rtk_fix', fix, t=timestamp)
-    bag.write('gps_rtk_track', track, t=timestamp)
-    bag.write('gps_rtk_speed', speed, t=timestamp)
+    bag.write('/gps_rtk_fix', fix, t=timestamp)
+    bag.write('/gps_rtk_track', track, t=timestamp)
+    bag.write('/gps_rtk_speed', speed, t=timestamp)
 
 def write_odom(time_us_T_O_Bks_with_covs, i, bag):
 
@@ -172,7 +172,7 @@ def write_odom(time_us_T_O_Bks_with_covs, i, bag):
     rospose.twist.twist.angular.y = 0.0
     rospose.twist.twist.angular.z = 0.0
 
-    bag.write('odometry', rospose, t=timestamp)
+    bag.write('/odometry', rospose, t=timestamp)
 
 def write_ms25(ms25, i, bag):
 
@@ -200,14 +200,14 @@ def write_ms25(ms25, i, bag):
     rosimu.linear_acceleration.x = float(accel_x)
     rosimu.linear_acceleration.y = float(accel_y)
     rosimu.linear_acceleration.z = float(accel_z)
-    bag.write('ms25_imu', rosimu, t=timestamp)
+    bag.write('/ms25_imu', rosimu, t=timestamp)
 
     rosmag = MagneticField()
     rosmag.header.stamp = timestamp
     rosmag.magnetic_field.x = mag_x
     rosmag.magnetic_field.y = mag_y
     rosmag.magnetic_field.z = mag_z
-    bag.write('ms25_mag', rosmag, t=timestamp)
+    bag.write('/ms25_mag', rosmag, t=timestamp)
 
 def write_ms25_euler(ms25_euler, i, bag):
 
@@ -229,7 +229,7 @@ def write_ms25_euler(ms25_euler, i, bag):
     rosquat.quaternion.z = q.z()   
     rosquat.quaternion.w = q.w()
 
-    bag.write('ms25_orientation', rosquat, t=timestamp)
+    bag.write('/ms25_orientation', rosquat, t=timestamp)
 
 def convert_vel(x_s, y_s, z_s):
 
@@ -305,7 +305,7 @@ def write_vel(vel_data, utime, num_hits, bag):
 
     pc2_msg = xyz_array_to_pointcloud2(np.array(vel_data), timestamp, 'velodyne')
 
-    bag.write('velodyne_packet', pc2_msg, t=timestamp)
+    bag.write('/velodyne_packet', pc2_msg, t=timestamp)
 
 def write_vel_sync(utime, velodyne_sync_folder, bag):
     csv_filepath = os.path.join(velodyne_sync_folder, str(utime) + '.bin.csv')
@@ -316,13 +316,13 @@ def write_vel_sync(utime, velodyne_sync_folder, bag):
     FRAME_ID = 'velodyne'
     pc2_msg = parse_vel_sync_csv(csv_filepath, timestamp, FRAME_ID)
 
-    bag.write('velodyne_full_scan', pc2_msg, t=timestamp)
+    bag.write('/velodyne_full_scan', pc2_msg, t=timestamp)
     end = time.time()
 
 def write_images(utime, images_folder, bag):
     timestamp = rospy.Time.from_sec(utime/1e6)
 
-    NUM_CAMERAS = 5
+    NUM_CAMERAS = 6
     num_images_added = 0
     for camera_idx in range(NUM_CAMERAS):
         cam_filepath = os.path.join(images_folder, 'Cam' + str(camera_idx), str(utime) + '.png')
@@ -338,7 +338,7 @@ def write_images(utime, images_folder, bag):
               rosimage.width = img_array.shape[1]
               rosimage.header.stamp = timestamp
 
-              bag.write('cam' + str(camera_idx) + '/image_raw', rosimage, t=timestamp)
+              bag.write('/cam' + str(camera_idx) + '/image_raw', rosimage, t=timestamp)
 
               num_images_added += 1
             
@@ -393,7 +393,7 @@ def write_hokuyo_30m_packet(hok_30m, utime, bag):
     hits.data = hok_30m
     hits.layout = layout
 
-    bag.write('hokuyo_30m_packet', hits, t=timestamp)
+    bag.write('/hokuyo_30m_packet', hits, t=timestamp)
 
 def read_next_hokuyo_4m_packet(f_bin):
 
@@ -445,7 +445,7 @@ def write_hokuyo_4m_packet(hok_4m, utime, bag):
     hits.data = hok_4m
     hits.layout = layout
 
-    bag.write('hokuyo_4m_packet', hits, t=timestamp)
+    bag.write('/hokuyo_4m_packet', hits, t=timestamp)
 
 def get_velodyne_sync_timestamps(velodyne_sync_folder):
     assert(os.path.exists(velodyne_sync_folder))

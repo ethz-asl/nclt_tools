@@ -5,19 +5,19 @@ import IPython
 np.set_printoptions(precision=16)
 
 def getRotationMatrixFromEulerAnglesRollPitchYaw(roll_rad, pitch_rad, yaw_rad):
-  R_roll = np.array([[np.cos(roll_rad), -np.sin(roll_rad), 0.0], 
-                     [np.sin(roll_rad), np.cos(roll_rad), 0.0], 
+  R_yaw = np.array([[np.cos(yaw_rad), -np.sin(yaw_rad), 0.0], 
+                     [np.sin(yaw_rad), np.cos(yaw_rad), 0.0], 
                      [0.0, 0.0, 1.0]])
 
   R_pitch = np.array([[np.cos(pitch_rad), 0.0, np.sin(pitch_rad)], 
                      [0.0, 1.0, 0.0], 
                      [-np.sin(pitch_rad), 0.0, np.cos(pitch_rad)]])
 
-  R_yaw = np.array([[1.0, 0.0, 0.0], 
-                    [0.0, np.cos(yaw_rad), -np.sin(yaw_rad)], 
-                    [0.0, np.sin(yaw_rad), np.cos(yaw_rad)]])
+  R_roll = np.array([[1.0, 0.0, 0.0], 
+                    [0.0, np.cos(roll_rad), -np.sin(roll_rad)], 
+                    [0.0, np.sin(roll_rad), np.cos(roll_rad)]])
 
-  R = np.dot(np.dot(R_roll, R_pitch), R_yaw)
+  R = np.dot(np.dot(R_yaw, R_pitch), R_roll)
   return R
 
 def getQuaternionFromFromEulerAnglesRollPitchYaw(roll_rad, pitch_rad, yaw_rad):
