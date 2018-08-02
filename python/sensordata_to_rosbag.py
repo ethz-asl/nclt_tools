@@ -16,6 +16,7 @@ from transformation_helpers import *
 from read_vel_sync import *
 from scipy import misc
 from parse_odometry import *
+from time_helpers import *
 import sys
 import numpy as np
 import struct
@@ -75,7 +76,7 @@ def write_gps(gps, i, bag):
     lng = gps[i, 4]
     alt = gps[i, 5]
 
-    timestamp = rospy.Time.from_sec(utime/1e6)
+    timestamp = microseconds_to_ros_timestamp(utime)
 
     status = NavSatStatus()
 
@@ -115,7 +116,7 @@ def write_gps_rtk(gps, i, bag):
     lng = gps[i, 4]
     alt = gps[i, 5]
 
-    timestamp = rospy.Time.from_sec(utime/1e6)
+    timestamp = microseconds_to_ros_timestamp(utime)
 
     status = NavSatStatus()
 
@@ -153,7 +154,7 @@ def write_odom(time_us_T_O_Bks_with_covs, i, bag):
     T_O_B = time_us_T_O_Bks_with_covs[i][1]
     cov = time_us_T_O_Bks_with_covs[i][2]
 
-    timestamp = rospy.Time.from_sec(utime/1e6)
+    timestamp = microseconds_to_ros_timestamp(utime)
 
     rospose = Odometry()
     rospose.child_frame_id = "Odometry"
@@ -190,7 +191,7 @@ def write_ms25(ms25, i, bag):
     rot_p = ms25[i, 8]
     rot_h = ms25[i, 9]
 
-    timestamp = rospy.Time.from_sec(utime/1e6)
+    timestamp = microseconds_to_ros_timestamp(utime)
 
     rosimu = Imu()
     rosimu.header.stamp = timestamp
@@ -217,7 +218,7 @@ def write_ms25_euler(ms25_euler, i, bag):
     p = ms25_euler[i, 2]
     h = ms25_euler[i, 3]
 
-    timestamp = rospy.Time.from_sec(utime/1e6)
+    timestamp = microseconds_to_ros_timestamp(utime)
 
     rosquat = QuaternionStamped()
     rosquat.header.stamp = timestamp
@@ -288,7 +289,7 @@ def read_next_vel_packet(f_vel):
 
 def write_vel(vel_data, utime, num_hits, bag):
 
-    timestamp = rospy.Time.from_sec(utime/1e6)
+    timestamp = microseconds_to_ros_timestamp(utime)
 
     layout = MultiArrayLayout()
     layout.dim = [MultiArrayDimension(), MultiArrayDimension()]
@@ -311,7 +312,7 @@ def write_vel_sync(utime, velodyne_sync_folder, bag):
     csv_filepath = os.path.join(velodyne_sync_folder, str(utime) + '.bin.csv')
     assert(os.path.exists(csv_filepath))
 
-    timestamp = rospy.Time.from_sec(utime/1e6)
+    timestamp = microseconds_to_ros_timestamp(utime)
 
     FRAME_ID = 'velodyne'
     pc2_msg = parse_vel_sync_csv(csv_filepath, timestamp, FRAME_ID)
@@ -320,7 +321,7 @@ def write_vel_sync(utime, velodyne_sync_folder, bag):
     end = time.time()
 
 def write_images(utime, images_folder, bag):
-    timestamp = rospy.Time.from_sec(utime/1e6)
+    timestamp = microseconds_to_ros_timestamp(utime)
 
     NUM_CAMERAS = 6
     num_images_added = 0
@@ -329,6 +330,7 @@ def write_images(utime, images_folder, bag):
         if os.path.exists(cam_filepath):
               img_array = misc.imread(cam_filepath)
               assert(img_array.dtype == 'uint8')
+              img_array = np.rot90(img_array, 1)
 
               rosimage = Image()
               rosimage.data = img_array.tostring()
@@ -381,7 +383,7 @@ def write_hokuyo_30m_packet(hok_30m, utime, bag):
     # hokuyo_30m always has 1081 hits
     num_hits = 1081
 
-    timestamp = rospy.Time.from_sec(utime/1e6)
+    timestamp = microseconds_to_ros_timestamp(utime)
 
     layout = MultiArrayLayout()
     layout.dim = [MultiArrayDimension()]
@@ -433,7 +435,7 @@ def write_hokuyo_4m_packet(hok_4m, utime, bag):
     # hokuyo_4m always has 726 hits
     num_hits = 726
 
-    timestamp = rospy.Time.from_sec(utime/1e6)
+    timestamp = microseconds_to_ros_timestamp(utime)
 
     layout = MultiArrayLayout()
     layout.dim = [MultiArrayDimension()]
