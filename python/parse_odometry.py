@@ -4,6 +4,7 @@ import numpy as np
 import minkindr as mk
 
 from transformation_helpers import *
+from sensor_extrinsics import * 
 
 def parse_synchronized_odometry(odometry_file, odometry_cov_file):
   assert(os.path.exists(odometry_file))
@@ -15,9 +16,11 @@ def parse_synchronized_odometry(odometry_file, odometry_cov_file):
   num_measurements = len(odom)
   assert(num_measurements == len(odom_cov))
 
-  T_O_Bkm1 = mk.Transformation()
+  T_O_BZUkm1 = mk.Transformation()
 
-  time_us_T_O_Bks_with_covs = []
+  time_us_T_O_BZUks_with_covs = []
+
+  T_BZU_B = get_T_BZU_B()
 
   print 'Parsing odometry...'
   for i in range(num_measurements):
@@ -31,7 +34,8 @@ def parse_synchronized_odometry(odometry_file, odometry_cov_file):
     yaw_rad = odom[i, 6]
 
     T_Bkm1_Bk = getTransformation(roll_rad, pitch_rad, yaw_rad, x_m, y_m, z_m)
-    T_O_Bk = T_O_Bkm1 * T_Bkm1_Bk
+    T_BZUkm1_BZUk = T_BZU_B * T_Bkm1_Bk * T_BZU_B.inverse()
+    T_O_BZUk = T_O_BZUkm1 * T_BZUkm1_BZUk
 
     cov = np.array([
       [odom_cov[i, 1], odom_cov[i, 2],  odom_cov[i, 3],  odom_cov[i, 4],  odom_cov[i, 5], odom_cov[i, 6]], 
@@ -41,9 +45,9 @@ def parse_synchronized_odometry(odometry_file, odometry_cov_file):
       [odom_cov[i, 5], odom_cov[i, 10], odom_cov[i, 14], odom_cov[i, 17], odom_cov[i, 19], odom_cov[i, 20]], 
       [odom_cov[i, 6], odom_cov[i, 11], odom_cov[i, 15], odom_cov[i, 17], odom_cov[i, 20], odom_cov[i, 21]]])
 
-    time_us_T_O_Bks_with_covs.append((utime, T_O_Bk, cov))
+    time_us_T_O_BZUks_with_covs.append((utime, T_O_BZUk, cov))
 
-    T_O_Bkm1 = T_O_Bk
+    T_O_BZUkm1 = T_O_BZUk
 
   print 'done'
 
@@ -53,4 +57,4 @@ def parse_synchronized_odometry(odometry_file, odometry_cov_file):
 
   #IPython.embed()
 
-  return time_us_T_O_Bks_with_covs
+  return time_us_T_O_BZUks_with_covs
