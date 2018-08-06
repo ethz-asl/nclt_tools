@@ -59,8 +59,8 @@ ncameras:
           label: cam0
           id: 700000000000000000000000000000c1
           line-delay-nanoseconds: 0
-          image_height: 400
-          image_width: 640
+          image_height: 808
+          image_width: 616
           type: pinhole
           intrinsics:
             rows: 4
@@ -94,8 +94,8 @@ ncameras:
           label: cam1
           id: 700000000000000000000000000000c1
           line-delay-nanoseconds: 0
-          image_height: 400
-          image_width: 640
+          image_height: 808
+          image_width: 616
           type: pinhole
           intrinsics:
             rows: 4
@@ -129,8 +129,8 @@ ncameras:
           label: cam2
           id: 700000000000000000000000000000c2
           line-delay-nanoseconds: 0
-          image_height: 400
-          image_width: 640
+          image_height: 808
+          image_width: 616
           type: pinhole
           intrinsics:
             rows: 4
@@ -164,8 +164,8 @@ ncameras:
           label: cam3
           id: 700000000000000000000000000000c3
           line-delay-nanoseconds: 0
-          image_height: 400
-          image_width: 640
+          image_height: 808
+          image_width: 616
           type: pinhole
           intrinsics:
             rows: 4
@@ -199,8 +199,8 @@ ncameras:
           label: cam4
           id: 700000000000000000000000000000c4
           line-delay-nanoseconds: 0
-          image_height: 400
-          image_width: 640
+          image_height: 808
+          image_width: 616
           type: pinhole
           intrinsics:
             rows: 4
