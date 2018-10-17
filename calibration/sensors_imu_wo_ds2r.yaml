@@ -65,7 +65,7 @@ ncameras:
     cameras:
       - camera:
           label: cam0
-          id: 700000000000000000000000000000c1
+          id: 700000000000000000000000000000c0
           line-delay-nanoseconds: 0
           image_height: 808
           image_width: 616
