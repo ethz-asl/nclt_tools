@@ -4,7 +4,7 @@
 
 namespace nclt {
 
-void getTimeAndTransformationFromDatasRecord(
+void getTimeAndTransformationFromDataRecord(
     const std::vector<std::string>& data_record, int64_t* timestamp_nanoseconds,
     aslam::Transformation* T_fi_fo) {
   CHECK_NOTNULL(timestamp_nanoseconds);
