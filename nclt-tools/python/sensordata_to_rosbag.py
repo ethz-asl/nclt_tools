@@ -224,7 +224,7 @@ def write_ms25_euler(ms25_euler, i, bag):
     rosquat = QuaternionStamped()
     rosquat.header.stamp = timestamp
 
-    q = getQuaternionFromFromEulerAnglesRollPitchYaw(r, p, h)
+    q = getQuaternionFromFromEulerAnglesRollPitchYawRad(r, p, h)
 
     rosquat.quaternion.x = q.x()
     rosquat.quaternion.y = q.y()    
@@ -232,6 +232,43 @@ def write_ms25_euler(ms25_euler, i, bag):
     rosquat.quaternion.w = q.w()
 
     bag.write('/ms25_orientation', rosquat, t=timestamp)
+
+def write_gt(gt, i, bag):
+
+    utime = gt[i, 0]
+
+    x = gt[i, 1]
+    y = gt[i, 2]
+    z = gt[i, 3]
+
+    euler_roll_rad = gt[i, 4]
+    euler_pitch_rad = gt[i, 5]
+    euler_yaw_rad = gt[i, 6]
+
+    T_GT_BodyZDown = getTransformationFromEulerAnglesRollPitchYawRadXYZMeters(euler_roll_rad, euler_pitch_rad, euler_yaw_rad, x, y, z)
+
+    T_GT_BZup = T_GT_BodyZDown * get_T_BZU_B().inverse()
+
+    timestamp = microseconds_to_ros_timestamp(utime)
+
+    rospose = Odometry()
+    rospose.child_frame_id = "Ground-Truth"
+    rospose.header.stamp = timestamp
+    rospose.pose.pose.position.x = T_GT_BZup.getPosition()[0]
+    rospose.pose.pose.position.y = T_GT_BZup.getPosition()[1]
+    rospose.pose.pose.position.z = T_GT_BZup.getPosition()[2]
+    rospose.pose.pose.orientation.x = T_GT_BZup.getRotation().x()
+    rospose.pose.pose.orientation.y = T_GT_BZup.getRotation().y()
+    rospose.pose.pose.orientation.z = T_GT_BZup.getRotation().z()
+    rospose.pose.pose.orientation.w = T_GT_BZup.getRotation().w()
+    rospose.twist.twist.linear.x = 0.0
+    rospose.twist.twist.linear.y = 0.0
+    rospose.twist.twist.linear.z = 0.0
+    rospose.twist.twist.angular.x = 0.0
+    rospose.twist.twist.angular.y = 0.0
+    rospose.twist.twist.angular.z = 0.0
+
+    bag.write('/ground_truth', rospose, t=timestamp)
 
 def convert_vel(x_s, y_s, z_s):
 
@@ -524,7 +561,7 @@ def main(args):
 
     ground_truth_path = os.path.join(root_dir, 'ground_truth')
     ground_truth_filepath = os.path.join(ground_truth_path, 'groundtruth_' + dataset_name + '.csv')
-    assert(os.path.exists(ground_truth_filename))
+    assert(os.path.exists(ground_truth_filepath))
     gt = np.loadtxt(ground_truth_filepath, delimiter = ",")
 
     i_gt = 0
@@ -582,6 +619,10 @@ def main(args):
             next_utime = ms25_euler[i_ms25_euler, 0]
             next_packet = "ms25_euler"
 
+        if i_gt < len(gt) and (gt[i_gt, 0] < next_utime or next_utime < 0):
+            next_utime = gt[i_gt, 0]
+            next_packet = "gt"
+
         if i_odom < len(time_us_T_O_Bks_with_covs) and (time_us_T_O_Bks_with_covs[i_odom][0] < next_utime or next_utime < 0):
             next_utime = time_us_T_O_Bks_with_covs[i_odom][0]
             next_packet = "odom"
@@ -624,6 +665,10 @@ def main(args):
             if next_utime >= start_time_us and next_utime <= end_time_us:
               write_ms25_euler(ms25_euler, i_ms25_euler, bag)
             i_ms25_euler = i_ms25_euler + 1
+        elif next_packet == "gt":
+            if next_utime >= start_time_us and next_utime <= end_time_us:
+              write_gt(gt, i_gt, bag)
+            i_gt = i_gt + 1
         elif next_packet == "odom":
             if next_utime >= start_time_us and next_utime <= end_time_us: 
               write_odom(time_us_T_O_Bks_with_covs, i_odom, bag)

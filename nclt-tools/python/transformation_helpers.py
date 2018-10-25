@@ -28,7 +28,7 @@ def getQuaternionFromFromEulerAnglesRollPitchYawRad(roll_rad, pitch_rad, yaw_rad
   return q
 
 def getTransformationFromEulerAnglesRollPitchYawRadXYZMeters(roll_rad, pitch_rad, yaw_rad, x_m, y_m, z_m):
-  q = getQuaternionFromFromEulerAnglesRollPitchYaw(roll_rad, pitch_rad, yaw_rad)
+  q = getQuaternionFromFromEulerAnglesRollPitchYawRad(roll_rad, pitch_rad, yaw_rad)
   p = np.array([x_m, y_m, z_m])
   T = mk.Transformation(q, p)
 
