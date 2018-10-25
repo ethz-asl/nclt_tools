@@ -33,7 +33,7 @@ def parse_synchronized_odometry(odometry_file, odometry_cov_file):
     pitch_rad = odom[i, 5]
     yaw_rad = odom[i, 6]
 
-    T_Bkm1_Bk = getTransformation(roll_rad, pitch_rad, yaw_rad, x_m, y_m, z_m)
+    T_Bkm1_Bk = getTransformationFromEulerAnglesRollPitchYawRadXYZMeters(roll_rad, pitch_rad, yaw_rad, x_m, y_m, z_m)
     T_BZUkm1_BZUk = T_BZU_B * T_Bkm1_Bk * T_BZU_B.inverse()
     T_O_BZUk = T_O_BZUkm1 * T_BZUkm1_BZUk
 

@@ -23,6 +23,7 @@ import struct
 import IPython
 import os
 import time
+from south_west_start_end_times import *
 
 #def xyz_array_to_pointcloud2(points, stamp=None, frame_id=None):
 #    '''
@@ -223,7 +224,7 @@ def write_ms25_euler(ms25_euler, i, bag):
     rosquat = QuaternionStamped()
     rosquat.header.stamp = timestamp
 
-    q = getQuaternionFromFromEulerAnglesRollPitchYaw(r, p, h)
+    q = getQuaternionFromFromEulerAnglesRollPitchYawRad(r, p, h)
 
     rosquat.quaternion.x = q.x()
     rosquat.quaternion.y = q.y()    
@@ -231,6 +232,43 @@ def write_ms25_euler(ms25_euler, i, bag):
     rosquat.quaternion.w = q.w()
 
     bag.write('/ms25_orientation', rosquat, t=timestamp)
+
+def write_gt(gt, i, bag):
+
+    utime = gt[i, 0]
+
+    x = gt[i, 1]
+    y = gt[i, 2]
+    z = gt[i, 3]
+
+    euler_roll_rad = gt[i, 4]
+    euler_pitch_rad = gt[i, 5]
+    euler_yaw_rad = gt[i, 6]
+
+    T_GT_BodyZDown = getTransformationFromEulerAnglesRollPitchYawRadXYZMeters(euler_roll_rad, euler_pitch_rad, euler_yaw_rad, x, y, z)
+
+    T_GT_BZup = T_GT_BodyZDown * get_T_BZU_B().inverse()
+
+    timestamp = microseconds_to_ros_timestamp(utime)
+
+    rospose = Odometry()
+    rospose.child_frame_id = "Ground-Truth"
+    rospose.header.stamp = timestamp
+    rospose.pose.pose.position.x = T_GT_BZup.getPosition()[0]
+    rospose.pose.pose.position.y = T_GT_BZup.getPosition()[1]
+    rospose.pose.pose.position.z = T_GT_BZup.getPosition()[2]
+    rospose.pose.pose.orientation.x = T_GT_BZup.getRotation().x()
+    rospose.pose.pose.orientation.y = T_GT_BZup.getRotation().y()
+    rospose.pose.pose.orientation.z = T_GT_BZup.getRotation().z()
+    rospose.pose.pose.orientation.w = T_GT_BZup.getRotation().w()
+    rospose.twist.twist.linear.x = 0.0
+    rospose.twist.twist.linear.y = 0.0
+    rospose.twist.twist.linear.z = 0.0
+    rospose.twist.twist.angular.x = 0.0
+    rospose.twist.twist.angular.y = 0.0
+    rospose.twist.twist.angular.z = 0.0
+
+    bag.write('/ground_truth', rospose, t=timestamp)
 
 def convert_vel(x_s, y_s, z_s):
 
@@ -330,7 +368,7 @@ def write_images(utime, images_folder, bag):
         if os.path.exists(cam_filepath):
               img_array = misc.imread(cam_filepath)
               assert(img_array.dtype == 'uint8')
-              img_array = np.rot90(img_array, 1)
+              img_array = np.rot90(img_array, -1)
 
               rosimage = Image()
               rosimage.data = img_array.tostring()
@@ -485,15 +523,48 @@ def main(args):
         print 'Please specify output rosbag file'
         return 1
 
-    bag = rosbag.Bag(sys.argv[2], 'w')
+    root_dir = sys.argv[1]
+    assert(os.path.exists(root_dir))
+    
+    dataset_name = sys.argv[2]
+    assert(len(dataset_name) > 0)
+    
+    bag_filepath = os.path.join(root_dir, 'bags', dataset_name + '_ds2r.bag')
+    
+    print 'Opening bag ', bag_filepath, ' for writing.'
+    bag = rosbag.Bag(bag_filepath, 'w')
+  
+    sensors_path = os.path.join(root_dir, 'sensor_data', dataset_name)
+    assert(os.path.exists(sensors_path))
 
-    gps = np.loadtxt(sys.argv[1] + "gps.csv", delimiter = ",")
-    gps_rtk = np.loadtxt(sys.argv[1] + "gps_rtk.csv", delimiter = ",")
-    ms25 = np.loadtxt(sys.argv[1] + "ms25.csv", delimiter = ",")
-    ms25_euler = np.loadtxt(sys.argv[1] + "ms25_euler.csv", delimiter = ",")
+    gps_filepath = os.path.join(sensors_path, "gps.csv")
+    assert(os.path.exists(gps_filepath))
+    gps = np.loadtxt(gps_filepath, delimiter = ",")
 
-    time_us_T_O_Bks_with_covs = parse_synchronized_odometry(sys.argv[1] + "odometry_mu.csv", sys.argv[1] + "odometry_cov.csv")
+    rtk_filepath = os.path.join(sensors_path, "gps_rtk.csv")
+    assert(os.path.exists(rtk_filepath))
+    gps_rtk = np.loadtxt(rtk_filepath, delimiter = ",")
 
+    ms25_filepath = os.path.join(sensors_path, "ms25.csv")
+    assert(os.path.exists(ms25_filepath))
+    ms25 = np.loadtxt(ms25_filepath, delimiter = ",")
+
+    ms25_euler_filepath = os.path.join(sensors_path, "ms25_euler.csv")
+    assert(os.path.exists(ms25_euler_filepath))
+    ms25_euler = np.loadtxt(ms25_euler_filepath, delimiter = ",")
+
+    odometry_filepath = os.path.join(sensors_path, "odometry_mu.csv")
+    assert(os.path.exists(odometry_filepath))
+    odometry_cov_filepath = os.path.join(sensors_path, "odometry_cov.csv")
+    assert(os.path.exists(odometry_cov_filepath))    
+    time_us_T_O_Bks_with_covs = parse_synchronized_odometry(odometry_filepath, odometry_cov_filepath)
+
+    ground_truth_path = os.path.join(root_dir, 'ground_truth')
+    ground_truth_filepath = os.path.join(ground_truth_path, 'groundtruth_' + dataset_name + '.csv')
+    assert(os.path.exists(ground_truth_filepath))
+    gt = np.loadtxt(ground_truth_filepath, delimiter = ",")
+
+    i_gt = 0
     i_gps = 0
     i_gps_rtk = 0
     i_ms25 = 0
@@ -502,11 +573,13 @@ def main(args):
     i_vel = 0
     i_img = 0
 
-    vel_sync_folder = os.path.join(sys.argv[1], 'velodyne_sync', 'csv')
+    vel_sync_folder = os.path.join(sensors_path, 'velodyne_sync', 'csv')
+    assert(os.path.exists(vel_sync_folder))
     vel_sync_timestamps_microseconds = get_velodyne_sync_timestamps(vel_sync_folder)
     assert(len(vel_sync_timestamps_microseconds) > 0)
 
-    images_folder = os.path.join(sys.argv[1], 'images', 'Undistorted-Downscaled-All')
+    images_folder = os.path.join(root_dir, 'images', dataset_name, 'lb3', 'Undistorted-Downscaled-All')
+    assert(os.path.exists(images_folder))
     images_timestamps_microseconds = get_image_timestamps(images_folder)
     assert(len(images_timestamps_microseconds) > 0)
 
@@ -520,10 +593,12 @@ def main(args):
 
     print 'Loaded data, writing ROSbag...'
 
-    max_num_messages = 20000
+    max_num_messages = 1e20
     num_messages = 0
-    while True:
 
+    start_time_us, end_time_us = start_end_times_us[dataset_name]
+
+    while True:
         # Figure out next packet in time
         next_packet = "done"
         next_utime = -1
@@ -543,6 +618,10 @@ def main(args):
         if i_ms25_euler < len(ms25_euler) and (ms25_euler[i_ms25_euler, 0] < next_utime or next_utime < 0):
             next_utime = ms25_euler[i_ms25_euler, 0]
             next_packet = "ms25_euler"
+
+        if i_gt < len(gt) and (gt[i_gt, 0] < next_utime or next_utime < 0):
+            next_utime = gt[i_gt, 0]
+            next_packet = "gt"
 
         if i_odom < len(time_us_T_O_Bks_with_covs) and (time_us_T_O_Bks_with_covs[i_odom][0] < next_utime or next_utime < 0):
             next_utime = time_us_T_O_Bks_with_covs[i_odom][0]
@@ -564,41 +643,55 @@ def main(args):
 
         #if utime_hok4>0 and (utime_hok4<next_utime or next_utime<0):
         #    next_packet = "hok4"
-
+       
         print 'next packet: ', next_packet
 
         # Now deal with the next packet
         if next_packet == "done":
             break
         elif next_packet == "gps":
-            write_gps(gps, i_gps, bag)
+            if next_utime >= start_time_us and next_utime <= end_time_us:
+              write_gps(gps, i_gps, bag)
             i_gps = i_gps + 1
         elif next_packet == "gps_rtk":
-            write_gps_rtk(gps_rtk, i_gps_rtk, bag)
+            if next_utime >= start_time_us and next_utime <= end_time_us:
+              write_gps_rtk(gps_rtk, i_gps_rtk, bag)
             i_gps_rtk = i_gps_rtk + 1
         elif next_packet == "ms25":
-            write_ms25(ms25, i_ms25, bag)
+            if next_utime >= start_time_us and next_utime <= end_time_us:
+              write_ms25(ms25, i_ms25, bag)
             i_ms25 = i_ms25 + 1
         elif next_packet == "ms25_euler":
-            write_ms25_euler(ms25_euler, i_ms25_euler, bag)
+            if next_utime >= start_time_us and next_utime <= end_time_us:
+              write_ms25_euler(ms25_euler, i_ms25_euler, bag)
             i_ms25_euler = i_ms25_euler + 1
+        elif next_packet == "gt":
+            if next_utime >= start_time_us and next_utime <= end_time_us:
+              write_gt(gt, i_gt, bag)
+            i_gt = i_gt + 1
         elif next_packet == "odom":
-            write_odom(time_us_T_O_Bks_with_covs, i_odom, bag)
+            if next_utime >= start_time_us and next_utime <= end_time_us: 
+              write_odom(time_us_T_O_Bks_with_covs, i_odom, bag)
             i_odom += 1
         elif next_packet == "vel":
-            write_vel(vel_data, utime_vel, num_hits, bag)
+            if next_utime >= start_time_us and next_utime <= end_time_us:
+              write_vel(vel_data, utime_vel, num_hits, bag)
             utime_vel, vel_data, num_hits = read_next_vel_packet(f_vel)
         elif next_packet == "vel_sync":
-            write_vel_sync(next_utime, vel_sync_folder, bag)
+            if next_utime >= start_time_us and next_utime <= end_time_us:
+              write_vel_sync(next_utime, vel_sync_folder, bag)
             i_vel += 1
         elif next_packet == "hok30":
-            write_hokuyo_30m_packet(hok30_data, utime_hok30, bag)
+            if next_utime >= start_time_us and next_utime <= end_time_us:
+              write_hokuyo_30m_packet(hok30_data, utime_hok30, bag)
             utime_hok30, hok30_data = read_next_hokuyo_30m_packet(f_hok_30)
         elif next_packet == "hok4":
-            write_hokuyo_4m_packet(hok4_data, utime_hok4, bag)
+            if next_utime >= start_time_us and next_utime <= end_time_us:
+              write_hokuyo_4m_packet(hok4_data, utime_hok4, bag)
             utime_hok4, hok4_data = read_next_hokuyo_4m_packet(f_hok_4)
         elif next_packet == "img":
-            write_images(next_utime, images_folder, bag)
+            if next_utime >= start_time_us and next_utime <= end_time_us:
+              write_images(next_utime, images_folder, bag)
             i_img += 1
         else:
             print "Unknown packet type"
