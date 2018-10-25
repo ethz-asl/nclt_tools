@@ -1,0 +1,4 @@
+sensors:
+  - id: f0000000000000000000000000000000
+    sensor_type: Ground_Truth
+    hardware_id: ground_truth

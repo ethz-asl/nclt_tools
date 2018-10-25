@@ -20,14 +20,14 @@ def getRotationMatrixFromEulerAnglesRollPitchYaw(roll_rad, pitch_rad, yaw_rad):
   R = np.dot(np.dot(R_yaw, R_pitch), R_roll)
   return R
 
-def getQuaternionFromFromEulerAnglesRollPitchYaw(roll_rad, pitch_rad, yaw_rad):
+def getQuaternionFromFromEulerAnglesRollPitchYawRad(roll_rad, pitch_rad, yaw_rad):
   R = getRotationMatrixFromEulerAnglesRollPitchYaw(roll_rad, pitch_rad, yaw_rad)
   #assert(np.linalg.det(R) == 1.0)
   q = mk.Quaternion(R)
 
   return q
 
-def getTransformation(roll_rad, pitch_rad, yaw_rad, x_m, y_m, z_m):
+def getTransformationFromEulerAnglesRollPitchYawRadXYZMeters(roll_rad, pitch_rad, yaw_rad, x_m, y_m, z_m):
   q = getQuaternionFromFromEulerAnglesRollPitchYaw(roll_rad, pitch_rad, yaw_rad)
   p = np.array([x_m, y_m, z_m])
   T = mk.Transformation(q, p)
