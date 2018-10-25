@@ -40,14 +40,15 @@ start_end_times_us = {
   #'2012-09-28': (1348867829415324, 1348868311331502),
   #'2012-10-28': (1351447257386290, 1351447733309056),
   #'2012-11-16': (1353100254746174, 1353100786747252),
-  '2012-11-04': (1352043741677010, 1352044391570802),
+  #'2012-11-04': (1352043741677010, 1352044391570802),
   #'2012-11-17': (1353175976858135, 1353176632776230),
   #'2012-12-01': (1354400544482626, 1354401076426224),
   #'2013-02-23': (1361647468373810, 1361648026267947),
   #'2013-04-05': (1365178967560658, 1365179387483361)
   }
   
-datasets_to_process = set(['2012-11-04'])
+datasets_to_process = set(['2012-01-15', '2012-01-22', '2012-02-02', '2012-02-04', '2012-02-05', '2012-02-12', '2012-02-18', '2012-02-19', '2012-03-17', '2012-03-25','2012-03-31','2012-04-29','2012-05-11','2012-05-26','2012-06-15','2012-08-04','2012-08-20','2012-09-28','2012-10-28','2012-11-16','2012-11-04','2012-11-17',
+'2012-12-01','2013-02-23','2013-04-05'])
 
 class Undistort(object):
 
@@ -111,7 +112,7 @@ def process(image_folder, undistort_map):
       processed += 1
       image_filename = root + '/' + f
 
-      out_directory = base + "/../Undistorted-Downscaled-SE/" + c_folder
+      out_directory = base + "/../Undistorted-Downscaled-All/" + c_folder
       #print 'Image output directory: ', out_directory
       out_image_filename = out_directory + '/' + f_name + ".png"
       if not os.path.exists(out_directory):
@@ -132,8 +133,8 @@ def main():
     #parser.add_argument('image_folders_path',  type=str, help='image_folders_path')
     #parser.add_argument('u_maps', type=str, help='undistortion maps')
 
-    images_folder = '../images'
-    umaps_folder = '../U2D_ALL_1616X1232' #U2D_Cam5_1616X1232.txt
+    images_folder = '/mnt/ASL_public_datasets/umich/umich/images'
+    umaps_folder = '/mnt/ASL_public_datasets/umich/umich/U2D_ALL_1616X1232' #U2D_Cam5_1616X1232.txt
     #args = parser.parse_args()
 
     num_cams = 6
@@ -145,7 +146,7 @@ def main():
       for name in os.listdir(images_folder):
           if os.path.isdir(os.path.join(images_folder, name)):
               if name in datasets_to_process:
-                image_path = os.path.join(images_folder, name, 'lb3/Undistorted-WS', cam_folder)
+                image_path = os.path.join(images_folder, name, 'lb3/Undistorted-All', cam_folder)
                 print 'Processing directory ' + image_path
                 process(image_path, u_map)
 
