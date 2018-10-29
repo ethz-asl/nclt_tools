@@ -174,7 +174,7 @@ def write_odom(time_us_T_O_Bks_with_covs, i, bag):
     rospose.twist.twist.angular.y = 0.0
     rospose.twist.twist.angular.z = 0.0
 
-    bag.write('/odometry', rospose, t=timestamp)
+    bag.write('/wheel_odometry', rospose, t=timestamp)
 
 def write_ms25(ms25, i, bag):
 
