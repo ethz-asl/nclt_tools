@@ -12,7 +12,7 @@ sensors:
     gravity_magnitude_mps2: 9.808083883386614
   - id: 20000000000000000000000000000000
     sensor_type: Relative_6DoF_Pose
-    hardware_id: odometry
+    hardware_id: wheel_odometry
     pose_measurement_covariance:
       rows: 6
       cols: 6
@@ -53,6 +53,9 @@ sensors:
         - 0
         - 0
         - 0.0001
+  - id: 50000000000000000000000000000000
+    sensor_type: LIDAR
+    hardware_id: velodyne
   - id: f0000000000000000000000000000000
     sensor_type: Ground_Truth
     hardware_id: ground_truth
@@ -297,6 +300,29 @@ sensor_system:
             - 0
             - 0
             - 1
+    - sensor_id: 50000000000000000000000000000000
+      extrinsics:
+        extrinsics_type: transformation
+        T_R_S:
+          rows: 4
+          cols: 4
+          data:
+            - 1.0000000000000000
+            - 0.0000000000000000
+            - 0.0000000000000000
+            - -0.1100000000000000
+            - 0.0000000000000000
+            - 1.0000000000000000
+            - 0.0000000000000000
+            - -0.1800000000000000
+            - 0.0000000000000000
+            - 0.0000000000000000
+            - 1.0000000000000000
+            - -0.7100000000000000
+            - 0.0000000000000000
+            - 0.0000000000000000
+            - 0.0000000000000000
+            - 1.0000000000000000
     - sensor_id: f0000000000000000000000000000000
       extrinsics:
         extrinsics_type: transformation
