@@ -36,21 +36,21 @@ sensors:
         - 0
         - 0
         - 0
-        - 0.0001
+        - 1e-4
         - 0
         - 0
         - 0
         - 0
         - 0
         - 0
-        - 0.0001
+        - 1e-4
         - 0
         - 0
         - 0
         - 0
         - 0
         - 0
-        - 0.0001
+        - 1e-4
 ncameras:
   - label: LB3 Umich Decloc
     id: 70000000000000000000000000000000
@@ -265,16 +265,6 @@ ncameras:
               - 0.0000000000000000
               - 0.0000000000000000
               - 1.0000000000000000
-mission_sensors_associations:
-  - mission_id: 4a999e12973165150800000000000000
-    sensor_ids:
-      - sensor_id: f0000000000000000000000000000000
-      - sensor_id: 40000000000000000000000000000000
-      - sensor_id: 30000000000000000000000000000000
-      - sensor_id: 20000000000000000000000000000000
-mission_ncamera_associations:
-  - mission_id: 4a999e12973165150800000000000000
-    ncamera_id: 70000000000000000000000000000000
 mission_optional_ncamera_associations: ~
 sensor_system:
   sensor_system_id: a0000000000000000000000000000000
